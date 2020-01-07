@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<style>
+
+button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+input {
+  position: absolute;
+  top: 10px;
+  left: 100px;
+}
+div {
+  position: absolute;
+  top: 10px;
+  left: 400px;
+}
+.test{
+    left:700px
+}
+
+circle {
+  fill: none;
+  stroke: #c4c4c4;
+  stroke-width: 1.5px;
+}
+
+</style>
+<button>Click Me</button>  
+<input id="search" type="text" name="search"><br>
+<div>
+    <input type="radio" id="cube" name="cube" value="cube">
+           
+    <label for="cube">Cube</label>
+  </div>
+  <div class="test">
+    <input type="radio" id="test" name="test" value="test"
+           >
+    <label for="test">Test</label>
+  </div>
+<svg width="960" height="800"></svg>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/javascript-lp-solver/prod/solver.js"></script>
+<script src="./rings.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    margin = {top: 30, right: 30, bottom: 30, left: 30},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom,
+
+
+
+
+
+    k = 6;
+
+data1 = {};
+data1.matrix = [
+  {"type":0,"l1":0,"dist":  [0,1,1,2,1,2,2,3],},
+  {"type":1,"l1":1,"dist":   [1,0,2,1,2,1,3,2],},
+  {"type":1,"l1":2,"dist":  [1,2,0,1,2,3,1,2],},
+  {"type":1,"l1":3,"dist":  [2,1,1,0,3,2,2,1],},
+  {"type":1,"l1":4,"dist":   [1,2,2,3,0,1,1,2],},
+  {"type":1,"l1":5,"dist":  [2,1,3,2,1,0,2,1],},
+  {"type":1,"l1":6,"dist":   [2,3,1,2,1,2,0,1],},
+  {"type":1,"l1":7,"dist":  [3,2,2,1,2,6,1,0],},
+];
+d3.select("#test").on("click",()=>{
+    main(data2,k);
+});
+d3.select("#cube").on("click",()=>{
+    main(data1,k);
+});
+d3.select("button").on("click", function() {
+    var hej = document.getElementById("search").value
+    fetch('https://catvis.win.tue.nl/solarview/api/v1/ariadne/philosophy/legacy/?input=%5B'+ hej +'%5D&json=1&distance=euclidean&show=40')
+  .then((response) => {
+    return response.json();
+  })
+  .then((myJson) => {
+    main(myJson,k)
+  });
+  
+});
+
+
+
+main(data2,k)
+function main(data2,k){
+    svg.selectAll("g").remove()
+g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+colors =   ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999","#f0f0f0"];
+center = data2.matrix[0].dist;
+matrix = data2.matrix.map( item => item.dist);
+var buckets = bucketing([...center],k);
+    poses = center.slice(0).map(item => {
+        var count = 0;
+        buckets.forEach(placement => {
+            if (item>placement[3]){
+                count++;
+            }
+        })
+        return count;
+    })
+    matrices = [];
+    centers = [];
+    original = [];
+    results = [];
+    difference = []
+    k++;
+    poses[0] = 0;
+    for (i = 0; i<k; i++){ 
+        matrices[i] = [];
+        centers[i] = [];
+        original[i] = [];
+    }
+    console.log("pos bis",poses);
+    
+    
+
+poses.forEach((pos,index,source)=> {
+    centers[pos].push(center[index])
+    original[pos].push(index);
+    matrices[pos].push(matrix[index].filter((list,indexInner) => pos == poses[indexInner]))
+    });
+console.log(matrices,centers,original);
+for (var iii = 0; iii<k; iii++){
+    
+    if (matrices[iii].length > 0){
+         results[iii] = tsp(matrices[iii],centers[iii],original[iii],solver,matrix);
+        results[iii].ii = iii;
+        console.log(results[iii]);
+        console.log(results[iii].placements.reduce((sum,add) => sum + add))
+    }
+    
+
+}
+var zoom = results.reduce((sum,add )=> sum<add["zoom"]?add["zoom"]:sum,0)
+console.log('zooom!',zoom)
+//if (zoom>1) results.forEach(item => item['radius']*= zoom);
+
+//console.log(results,results.filter(d => d),"FGDJSAFDSAFSD");
+
+
+console.log(results);
+
+
+if (results[0]){
+    results[0].neg = 1;
+    results[0].turn = 0;
+}
+extra = [];
+for(var i = 1;i<k; i++){ // calculate positions of rotation and direction
+    extra[i] = [];
+    if (results[i]){
+    var points = Object.assign({}, results[i]); 
+    points.id = points.shortestCycle;
+    counter = 0;
+    points.pos =[];
+    points.rot = [];
+    for (var turn = 0; turn < 2*Math.PI; turn += Math.PI/10 ){
+        for (var neg = 1; neg > -2 ; neg-=2){
+            points.rot[counter] = {"turn":turn,"neg":neg};
+            if(points.shortestCycle) points.pos[counter] = points.placements.map((item,index) => mod(neg*item+turn,Math.PI*2));
+            counter++
+        }
+    }
+    data = distortionCalculator(i,points,results,matrix,extra);
+    console.log('data extra',data.extra);
+    difference[i] = data.bestDif;
+    console.log(results[i])
+        results[i].rota = points.rot[data.bestPlacement];
+        results[i].turn = points.rot[data.bestPlacement].turn;
+        results[i].neg = points.rot[data.bestPlacement].neg;
+        if (results[i].neg == -1){
+            results[i].placements.reverse();
+            results[i].shortestCycle.reverse();
+            results[i].center.reverse();
+            results[i].distances.reverse();
+        }
+        results[i].placements = results[i].placements.map( pos => {
+            //console.log('posss',results[i].rota,pos, mod((pos*results[i].neg + results[i].turn),(Math.PI*2)));
+            return mod((pos + results[i].turn),(Math.PI*2))
+        });
+    }
+}
+//results.forEach((result,index) => results[index].placements = result.placements.map( pos =>  mod((pos*result.neg + result.turn),(Math.PI*2))));
+console.log("bling",difference,results);
+totalDiff = results.map( item=> Infinity);
+sumDiff = Infinity;
+nn =0;
+improving = true;
+while (improving && nn< 1000){
+    for(var i = 0;i<k; i++){
+
+        if (results[i]){
+            results[i].shortestCycle.forEach((item,index,source) =>{ 
+                forbidden = [];
+                if (source.length > 1 ){
+                    bl= 1;
+                forbidden.push([results[i].placements[mod((index-1),results[i].placements.length)]+ matrix[item][source[mod((index-1),results[i].placements.length)]]/(results[i].radius* 1),
+                    results[i].placements[mod((index+1),results[i].placements.length)]- matrix[item][source[mod((index+1),results[i].placements.length)]]/(results[i].radius* 1)])
+                    ;
+                   if(item=="9") console.log([results[i].placements[mod((index+1),results[i].placements.length)]- matrix[item][source[mod((index+1),results[i].placements.length)]]/(results[i].radius* 1)
+                     , results[i].placements[mod((index-1),results[i].placements.length)]+ matrix[item][source[mod((index-1),results[i].placements.length)]]/(results[i].radius* 1)],
+                     " haha",index,results[i].placements[index],
+                     results[i].placements[mod((index-1),results[i].placements.length)], matrix[item][source[mod((index-1),results[i].placements.length)]],"piss",(results[i].radius* 1),
+                     results[i].placements[mod((index+1),results[i].placements.length)],
+                      matrix[item][source[mod((index+1),results[i].placements.length)]],
+                      (results[i].radius* 1)
+                     , results[i].placements[mod((index-1),results[i].placements.length)],
+                      matrix[item][source[mod((index-1),results[i].placements.length)]],
+                      (results[i].radius* 1),results[i].placements[index])
+                    //forbidden på index +-1 max och min värden
+                }
+                if (i > 0){
+                for(var j = 0;j<i; j++){
+                    if (results[j]){ 
+                        results[j].placements.forEach( (innerItem,innerIndex) =>{ 
+                            var non = (matrix[item][results[j].shortestCycle[innerIndex]] -(results[i].radius - results[j].radius))/(results[j].radius* 1);
+                            if( non > 0)forbidden.push([mod((innerItem-non),(Math.PI*2)),mod((innerItem+non),(Math.PI*2))]);
+                            //if( non > 0)console.log([mod((innerItem-non),(Math.PI*2)),mod((innerItem+non),(Math.PI*2))],"weooo",Array.from(forbidden));
+                            //if(!( non > 0)) console.log('non',non,i,j);
+                            //forbidden områden från ringar längre in.
+                        })
+                    }
+                }
+            }
+            fcopy = Array.from(forbidden);
+            var forbiddenDone = [];
+            if (forbidden.length>0) {forbiddenDone = forbiddenCalculator(forbidden);
+            console.log("bof!",forbidden,fcopy,forbiddenDone,"iiii",i,nn,results[i].placements[index],
+            mod(results[i].placements[mod((index-1),results[i].placements.length)]- matrix[item][source[mod((index-1),results[i].placements.length)]]/results[i].radius,Math.PI*2));
+            // här ska skrivas test på forbidden, så den bara består av forbidden delarna, vars edges är de platser vi kollar
+            var points = Object.assign({}, results[i]); 
+            points.id = [item];
+            points.rot = [];
+            points.pos = forbiddenDone.reduce((sum,add)=> [...sum,...add],[points.placements[index]]).map(item => [item]);
+            data = distortionCalculator(i,points,results,matrix,extra,true);
+           // console.log(data,'data');
+            if (totalDiff[i]> data.bestDif){
+                console.log(points.pos[data.bestPlacement][0],i,"wat",item,index,totalDiff[i],data.bestDif);
+                results[i].placements[index] = points.pos[data.bestPlacement][0];
+                totalDiff[i] = data.bestDif;
+            }
+            }
+            })
+        }
+    }
+    var newDiff = totalDiff.reduce((sum,add)=> add==Infinity?sum:sum+add,0);
+    if ( newDiff>= sumDiff) improving = false;
+    console.log(totalDiff,nn,newDiff,sumDiff, newDiff >= sumDiff);
+    sumDiff = newDiff;
+    nn++;
+}
+
+
+
+
+console.log(results);
+var bla =radialDist( results,k,matrix.length);
+var bla2 =focusDist( results,k,matrix.length,matrix);
+svar =bla.map((item,index)=> item.map((innerItem,innerIndex)=> innerItem-matrix[index][innerIndex])).reduce((sum,add) => sum+ add.reduce((sum1,add1)=> sum1+add1),0)/(matrix.length*matrix[0].length);
+//svar = bla.reduce((sum,add) => sum+ add.reduce((sum1,add1)=> sum1+add1),0);
+svar2 = bla2.reduce((sum1,add1)=> sum1+add1);
+console.log(svar,svar2,bla2,"bal2",bla,matrix,bla.map((item,index)=> item.map((innerItem,innerIndex)=> innerItem-matrix[index][innerIndex])));
+
+console.timeEnd('test');
+
+
+
+var res3d = g.selectAll('g')
+            .data(results)
+            .join("g")
+            
+            res3d.append("g").append("circle")
+            .attr("r", (d,i)=> (i)*400/k)//results[iii].radius*200)
+            .attr("stroke-opacity", 1)
+            .attr("cy", height/2)
+            .attr("cx",  width/2);
+var knappar = g.append("g")
+            .selectAll('g')
+            .data(results.map((item,i)=> {item.ii = i; return item}).filter(d => d))
+            .join("g")
+            .append("g")
+            .selectAll("g")
+            .data((d,i) => {
+                return   d.placements.map( item => [item,d.ii])
+            })
+            .join("g")
+            .attr("transform", (da,i) =>{
+                //console.log(da,"egfdsg")
+                return"translate("+ (width/2+Math.cos(da[0])*(da[1])*400/k)+","+(height/2 +Math.sin(da[0])*(da[1])*400/k)+")"
+        })
+            //.append("text")
+            //.text('Hello!')
+
+            knappar.append("circle")
+            .attr("r",10)
+            .attr("id", (de,i)=> results[de[1]].shortestCycle[i] )
+            .on("mouseover", (d,i)=>{
+               var list = [];
+               var other = [(width/2+Math.cos(d[0])*(d[1])*400/k),(height/2 + Math.sin(d[0])*(d[1])*400/k)];
+                results.forEach((item,index) => {
+                    item.placements.forEach( (innerItem,innerIndex) =>{ 
+                        //list.push(other);
+                        list.push([[[ (width/2+Math.cos(innerItem)*(index)*400/k),+(height/2 +Math.sin(innerItem)*(index)*400/k)],other],matrix[results[d[1]].shortestCycle[i]][results[index].shortestCycle[innerIndex]]])
+                    })
+                })
+                p = d3.line().context(null);
+
+                g.selectAll('path')
+                .data(list)
+                .join("path")
+                .attr("d",d => p(d[0]))
+                .attr("stroke", "black")
+                .attr("stroke-width", d=> (d[1])+"px")
+
+            })
+            .on("mouseout", ()=>  g.selectAll('path').remove())
+            .on("click", function(d,i) {
+                var hej = data2.matrix[results[d[1]].shortestCycle[i]].l1;
+                fetch('https://catvis.win.tue.nl/solarview/api/v1/ariadne/philosophy/legacy/?input=%5B'+ hej +'%5D&json=1&distance=euclidean&show=40')
+            .then((response) => {
+                return response.json();
+            })
+            .then((myJson) => {
+                main(myJson,5)
+            });
+            
+            })
+            .attr("stroke-opacity", 1)
+            //.attr("cy",  height/2 +Math.sin(innerItem)*(index)*30)
+            //.attr("cx",  width/2+ Math.cos(innerItem)*item.radius*200   )
+            //.attr("cx", width/2 +Math.cos(innerItem)*(index)*30)//*item.radius*200   )
+
+            .style("fill", (de,i)=> {
+               return colors[data2.matrix[results[de[1]].shortestCycle[i]].type]
+            })
+            knappar.append("text")
+            .text((da,i)=> data2.matrix[results[da[1]].shortestCycle[i]].l1)
+            .attr("transform", (da,i) =>{
+                //console.log(da,"egfdsg")
+                return"translate("+ (Math.cos(da[0])*30-12)+","+(Math.sin(da[0])*20)+")"
+        })
+console.log('')
+// .attr("cy", item.shortestCycle[innerIndex]=="a6"? height/2 +Math.sin(2.3)*item.radius*200: height/2 +Math.sin(innerItem)*(index)*30)
+//             //.attr("cx",  width/2+ Math.cos(innerItem)*item.radius*200   )
+//             .attr("cx",  item.shortestCycle[innerIndex]=="a6"? width/2 +Math.cos(2.3)*item.radius*200: width/2 +Math.cos(innerItem)*(index)*30)//*item.radius*200   )
+}
+function tsp (distances,center,indis,solver,matrix){
+    var constraints = {};
+    var variables = {};
+    var ints = {};
+    var radi = 1*(center.reduce((sum, add)=> sum + add)/center.length);
+    if (distances.length<2){
+        console.log('korting')
+    results= {};
+    results["orginal"] = indis;
+    results["shortestCycle"] = [""+indis[0]];
+    results["placements"] = [2*Math.PI];
+    results["center"] = center;
+    results["radius"] = radi
+    results["distances"] = distances;
+    return results;
+    }
+    
+    distances.forEach( (row,index) => {
+        row.forEach((a,i)=>{
+            if (!(i <= index )){
+                variables[indis[index]+","+indis[i]]= {"distance":a, ["u"+indis[i]]: 1, ["d"+indis[i]]: 1,["u"+indis[index]]: 1, ["d"+indis[index]]: 1, "uses":1,"uses2":1,["i"+indis[index]+","+indis[i]]:1}
+                constraints["i"+indis[index]+","+indis[i]] = {'max':1};
+                ints[indis[index]+","+indis[i]]=1;
+            }
+        })
+    }) ;
+
+    for (b = 0; b < distances.length; b++) {
+        constraints["u"+indis[b]] = {"max": 2};
+        constraints["d"+indis[b]] = {"min": 2};
+    }
+    var solver = solver,
+    results,
+    model = {
+        "optimize": "distance",
+        "opType": "min",
+        "constraints": constraints,
+        "variables": variables,
+        "ints":ints
+    };
+    sub = 0;
+    notFull = true;
+    //console.log(model,'model')
+    while (notFull && sub < 100){
+        console.log(Object.assign(model,{}),'model');
+        results = solver.Solve(model);
+        console.log('resss',results,sub);
+        // get list of list of vertices in the edges used, if one is used twice get it twice.
+        var edges = Object.keys(variables).filter( item => item in results).concat(Object.keys(variables).filter( item => results[item]==2)).map( item => item.split(","));
+        var orgEdges = Object.keys(variables).filter( item => item in results);
+        var cycle = edges.map(item => []);
+        var shortestCycle = [];
+        for (i =0; i< edges.length; i++){
+            var lengths = 0;
+            var goal = edges[i][0];
+            var iter = edges[i][1];
+            var iterIndex = i;
+            cycle[i][0] = goal;
+            cycle[i][1] = iter;
+            notDone = true;
+            cyclePos = 1;
+            while (notDone && lengths < 1000 ){
+                cyclePos++;
+                lengths++;
+                theOne = edges.find( (element,index) => element.includes(iter) && index!=iterIndex);
+                index = theOne.findIndex(ele => ele == iter);
+                invertedIndex = +!index;
+                if (goal == theOne[invertedIndex]){
+                    notDone = false;
+                }else{
+                    iterIndex = edges.findIndex( (element,index) => element.includes(iter) && index!=iterIndex);
+                    iter = theOne[invertedIndex];
+                    cycle[i][cyclePos] = iter;
+                }
+
+            }
+            if ((cycle[i].length != 0 && cycle[i].length < shortestCycle.length) || shortestCycle.length == 0) shortestCycle = cycle[i]; 
+        }
+        minLength = Math.min(...cycle.map(item => item.length));
+        if (minLength >= distances.length){
+            notFull = false;
+        }else{
+             shortestCycleMulti = cycle.filter(item => item.length == minLength).filter((item,index,source)=> {
+                for (i=0;i<index;i++){
+                    if ( source[i].includes(item[0])) return false;
+                }
+                return true;
+            })
+            .map( item =>
+                Object.keys(model.variables).filter( innerItem => 
+                  2 == item.reduce((sum,num)  => (innerItem.split(",")[0] == num || innerItem.split(",")[1] == num)?sum+1:sum,0)
+                )
+            );
+            console.log(shortestCycleMulti,'fakkeee',i);
+            shortestCycleMulti.forEach((item,index) => item.forEach(superitem =>{ 
+            model.variables[superitem]["v"+sub+","+index]=1;
+            model.constraints["v"+sub+","+index] = {"max":minLength-1};
+            }));
+
+            }
+        sub++;
+    }
+    console.log(sub);
+    results["shortestCycle"] = shortestCycle;
+    results["shortest"] = indis.reduce((sum,add,index,source)=>{
+        return (sum += matrix[add][source[mod(add-1,indis.length)]])
+    })
+    results["myShortest"] = shortestCycle.reduce((sum,add,index,source)=>{
+        return (sum += matrix[add][source[mod(add-1,indis.length)]])
+    },0)
+    results["orginal"] = indis;
+    placements = shortestCycle.map((matrixIndex,index,source) => index==0?matrix[matrixIndex][source[shortestCycle.length-1]]:matrix[matrixIndex][source[index-1]]);
+    console.log(placements,'badabim',placements.reduce((sum,add)=> sum+add),radi);
+    results["placements"] = placements.map(item => item*(2*Math.PI)/placements.reduce((sum,add) => sum + add));
+    console.log(placements,results["placements"],"answers")
+    results["center"] = center;
+    results["distances"] = distances;
+    for (ii = 1 ; ii < shortestCycle.length; ii++ ) {
+        results.placements[ii] += results.placements[ii-1];
+    }
+    results["radius"] = radi;//1.5*placements.reduce((sum,add)=> sum+add)/(2*Math.PI)
+    results["zoom"] =  placements.reduce((sum,add)=> sum+add)/(radi*2*Math.PI) ;
+    return results;
+}
+
+
+function radialDist( results,k,nr){
+    var matrix1 = [];
+    for (var p = 0; p<nr; p++) matrix1[p] = [];
+    for (var i = 0; i<k; i++){
+        for(var j = 0;j<=i; j++){
+            if (results[i] && results[j]){ 
+                results[i].shortestCycle.forEach((item,index) =>{ 
+                    results[j].shortestCycle.forEach((innerItem,innerIndex) =>{ 
+                        matrix1[innerItem][item] = (results[i].radius -results[j].radius) + results[j].radius * 1 *
+                        (Math.abs(results[j].placements[innerIndex]- results[i].placements[index]) )
+                        matrix1[item][innerItem] = (results[i].radius -results[j].radius) + results[j].radius * 1 *
+                        (Math.abs(results[j].placements[innerIndex]- results[i].placements[index]) )
+                        // D (e1, e2) (r2 - r1) + r1 |angle 1 - angle 2|.
+                    })
+                })
+
+            }
+        }
+        }
+    
+    return matrix1;
+}
+function focusDist( results,k,nr,matrix){
+    var matrix1 = [];
+    //for (var p = 0; p<nr; p++) matrix1[p] = [];
+    for (var i = 0; i<k; i++){
+            if (results[i] ){ 
+                results[i].shortestCycle.forEach((item,index) =>{ 
+                        console.log("fopp",item,results[i],matrix[0][item],results[i].radius-matrix[0][item])
+                        matrix1[item] = (results[i].radius -matrix[0][item]); 
+                })
+
+            }
+        }
+    
+    return matrix1;
+}
+
+
+
+console.log(forbiddenCalculator([
+    [1,2],
+    [1.5,3],
+    [4,5],
+    [5.5,1.5],
+    [6,2]
+]));
+function forbiddenCalculator (source){
+    copy = Array.from(source);
+    newlist = [];
+    notDone = true;
+    source.sort((a,b) => a[0] - b[0]);
+    sortedcopy = Array.from(source);
+    front = source.shift();
+    if (front[0]> front[1]) front[1] +=(Math.PI*2);
+    while (source.length>0){
+        potent = source.shift();
+        //console.log(front,potent,newlist);
+        if (potent[0]> potent[1]) potent[1] +=(Math.PI*2);
+        //console.log(front[1],potent[0] ,potent[0]> front[1] ,newlist,"ute");
+        if (potent[0]> front[1]){
+            newlist.push([front[0],front[1]%(Math.PI*2)]);
+            front = potent;
+        }else{
+            front = [Math.min(front[0],potent[0]),Math.max(front[1],potent[1])]
+        }
+    }
+    //console.log(newlist,"nya saker",front,copy,sortedcopy);
+    if (front[1]>=(Math.PI*2)){
+        front[1] = front[1]%(Math.PI*2);
+        while (notDone && newlist.length >0){
+            //console.log(newlist,copy,front);
+            if(front[1]>=newlist[0][0]){ 
+                front[1] = Math.max(newlist.shift()[1],front[1]);
+            }else{
+                notDone = false;
+            }
+        }
+    }
+    newlist.push(front);
+        return newlist;
+
+}
+
+
+
+
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+
+function bucketing(data,k){
+    var output = [];
+    var fixed = data.map((item,index,source) => {
+    if (index!=0){
+        return [item-source[index-1],item,source[index-1], (item+source[index-1])/2,index]
+    }
+}).slice(1);
+    while (output.length< k){
+    console.log([...fixed],"fuck");
+    var first = fixed.sort((a,b)=> b[0] -a[0]).shift(0);
+    if (first[4]===1){
+        fixed.push([first[0]/2,first[1]/2,0,1]);
+    }else{
+    fixed.push([first[0]/2,first[1],first[3],(first[1]+first[3])/2,false]);
+    fixed.push([first[0]/2,first[3],first[2],(first[3]+first[2])/2,false]);
+    }
+    output.push(first);
+    }
+    return output;
+
+
+}
+
+function distortionCalculator(i,points,results,matrix,extra = [],countI = false){
+    var bestDif = Infinity;
+    var bestPos = 0;
+    var difference;
+    var bestPlacement =0;
+    console.log('pointsss',points,i)
+    for (var posIndex = 0; posIndex< points.pos.length; posIndex++){
+        difference = 0;
+        if( i > 0){
+        for(var j = 0;j<i; j++){
+            if (points && results[j]){ 
+                difference +=  points.id.reduce((sum,item,index) =>{ 
+                return (sum + results[j].shortestCycle.reduce((innerSum,innerItem,innerIndex) =>{ 
+                var distor = (((points.radius -results[j].radius) + results[j].radius *  1*
+                (Math.abs(results[j].placements[innerIndex]- points.pos[posIndex][index] ))) / matrix[item][innerItem])
+                // D (e1, e2) (r2 - r1) + r1 |angle 1 - angle 2|.
+                //console.log('distor',distor,i,posIndex,points.pos[posIndex][index],(points.radius -results[j].radius) + results[j].radius * 
+               // (Math.abs(results[j].placements[innerIndex]- points.pos[posIndex][index] )) , matrix[item][innerItem]);
+
+
+                
+                return( distor<1?innerSum+100:innerSum+distor)},0))},0)
+            }
+        }
+        }
+        if (results[i] && countI){
+            difference +=  points.id.reduce((sum,item,index) =>{ 
+                return (sum + results[i].shortestCycle.reduce((innerSum,innerItem,innerIndex) =>{ 
+                    if (item == innerItem) return 0;
+                var distor1 = (( results[i].radius *  1 *
+                (Math.abs((results[i].placements[innerIndex]) - points.pos[posIndex][index] ))) / matrix[item][innerItem])
+               // if ((item==15 && innerItem==18) ||(item==13 && innerItem==17)) console.log(distor1,'bam bam bam!', ( distor1<1?100:distor1));
+                return( distor1<1?innerSum+100:innerSum+distor1)},0))},0)
+        }
+        // console.log(difference[i],bestDif)
+        //extra[i][posIndex] = difference; 
+        if (difference < bestDif ){
+            bestDif = difference;
+            bestPlacement = posIndex;
+        }
+    }
+    //console.log(difference," diff ",i);
+    return {"bestDif":bestDif,"bestPlacement":bestPlacement,"extra":extra}
+    
+}
+
+
+
+
+</script>

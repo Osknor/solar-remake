@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<style>
+
+button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+circle {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+</style>
+<button>Click Me</button>
+<svg width="960" height="800"></svg>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/javascript-lp-solver/prod/solver.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    margin = {top: 30, right: 30, bottom: 30, left: 30},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom,
+    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var clicks = 0;
+  d3.select("button").on("click", function() {
+  clicks += 1;
+
+  var circle = g.append("circle")
+      .attr("r", 3.5+clicks*10)
+      .attr("stroke-opacity", 1)
+      .attr("cy", height/2)
+      .attr("cx",  width/2);
+
+
+
+//   circle.transition()
+//       .duration(750)
+//       .ease(d3.easeCubicOut)
+//       .attr("r", 3.5+clicks*10)
+//       .attr("stroke-opacity", 1)
+    // .transition()
+    //   .delay(5000 - 750 * 2)
+    //   .ease(d3.easeCubicIn)
+    //   .attr("r", 80)
+    //   .attr("stroke-opacity", 0)
+    //   .remove();
+});
+
+// var x = d3.scaleTime()
+//     .range([0, width]);
+
+//     x.domain([0, 100]);
+
+
+/*d3.timer(function() {
+  var now = Date.now();
+  x.domain([now - 5000, now]);
+  xAxisG.call(xAxis);
+});*/
+
+data2 = {"matrix":[{"id":0,"type":0,"l1":"amniotic","l2":"","dist":[0,0.50206,0.561944,0.601928,0.60922,0.6286,0.662024,0.662212,0.693956,0.702204,0.708352,0.708516,0.710436,0.713976,0.715548,0.717152,0.717192,0.719368,0.72264,0.724072]},{"id":1,"type":0,"l1":"amnion","l2":"","dist":[0.50206,0,0.896952,0.237976,0.88862,0.450784,0.4163,0.867156,0.834416,1.007816,0.612916,0.568376,0.772708,0.832148,0.923952,0.76302,0.89872,0.725936,0.901404,0.912028]},{"id":2,"type":0,"l1":"amniotic fluid","l2":"","dist":[0.561944,0.896952,0,0.991588,0.270588,0.9999,0.861008,0.84046,0.862468,0.62214,0.84652,0.921436,0.965496,0.875972,0.882232,0.86052,0.878196,0.940936,0.872584,0.312564]},{"id":3,"type":7,"l1":"subject:amnion metabolism","l2":"","dist":[0.601928,0.237976,0.991588,0.000256,0.971728,0.403484,0.559232,0.929716,0.827016,0.940136,0.667432,0.665116,0.771124,0.844608,0.95022,0.787604,0.933196,0.8599,0.98932,1.031708]},{"id":4,"type":7,"l1":"subject:amniotic fluid chemistry","l2":"","dist":[0.60922,0.88862,0.270588,0.971728,0,0.969788,0.80294,0.806448,0.842792,0.673832,0.808176,0.858944,0.938324,0.83492,0.902448,0.885012,0.900396,0.94424,0.888196,0.42624]},{"id":5,"type":7,"l1":"subject:amnion cytology","l2":"","dist":[0.6286,0.450784,0.9999,0.403484,0.969788,0,0.79814,0.963996,0.996272,1.068048,0.86994,0.652932,0.887928,0.918712,0.858012,0.788408,0.842176,1.013764,0.960696,0.995056]},{"id":6,"type":0,"l1":"chorion","l2":"","dist":[0.662024,0.4163,0.861008,0.559232,0.80294,0.79814,0.000976,0.920372,0.896568,0.888304,0.569108,0.647664,0.858268,0.859828,0.952184,0.904636,0.942612,0.596392,0.868996,0.94004]},{"id":7,"type":2,"l1":"author:horii t","l2":"","dist":[0.662212,0.867156,0.84046,0.929716,0.806448,0.963996,0.920372,0.000536,0.881652,0.877352,0.887756,0.8532,0.87224,0.916436,0.82336,0.964904,0.849868,0.842668,0.901908,0.95434]},{"id":8,"type":7,"l1":"subject:chorioamnionitis microbiology","l2":"","dist":[0.693956,0.834416,0.862468,0.827016,0.842792,0.996272,0.896568,0.881652,0,0.434764,0.904232,1.00944,0.743612,0.952128,0.921808,0.928932,0.90648,0.917892,0.832124,0.963084]},{"id":9,"type":7,"l1":"subject:amniotic fluid microbiology","l2":"","dist":[0.702204,1.007816,0.62214,0.940136,0.673832,1.068048,0.888304,0.877352,0.434764,0.000508,0.901276,0.975452,0.819752,0.875304,0.952468,0.980784,0.9593,0.918692,0.909312,0.810936]},{"id":10,"type":7,"l1":"subject:extraembryonic membranes metabolism","l2":"","dist":[0.708352,0.612916,0.84652,0.667432,0.808176,0.86994,0.569108,0.887756,0.904232,0.901276,0,0.866772,0.83144,0.954584,1.036612,0.905324,0.964736,0.742852,0.956756,0.90308]},{"id":11,"type":7,"l1":"subject:amnion enzymology","l2":"","dist":[0.708516,0.568376,0.921436,0.665116,0.858944,0.652932,0.647664,0.8532,1.00944,0.975452,0.866772,0,1.01764,0.87974,0.936224,0.871652,0.922024,0.827016,0.92486,0.992024]},{"id":12,"type":7,"l1":"subject:amnion pathology","l2":"","dist":[0.710436,0.772708,0.965496,0.771124,0.938324,0.887928,0.858268,0.87224,0.743612,0.819752,0.83144,1.01764,0.000492,0.845524,0.914984,0.954512,0.926216,0.823512,0.927264,0.950896]},{"id":13,"type":0,"l1":"jacobs","l2":"","dist":[0.713976,0.832148,0.875972,0.844608,0.83492,0.918712,0.859828,0.916436,0.952128,0.875304,0.954584,0.87974,0.845524,0,0.912188,0.956068,0.89526,0.941884,1.09288,0.819224]},{"id":14,"type":7,"l1":"subject:papain","l2":"","dist":[0.715548,0.923952,0.882232,0.95022,0.902448,0.858012,0.952184,0.82336,0.921808,0.952468,1.036612,0.936224,0.914984,0.912188,0.001016,0.864536,0.151476,1.019764,0.890284,0.870392]},{"id":15,"type":7,"l1":"subject:hearing loss sensorineural prevention and control","l2":"","dist":[0.717152,0.76302,0.86052,0.787604,0.885012,0.788408,0.904636,0.964904,0.928932,0.980784,0.905324,0.871652,0.954512,0.956068,0.864536,0.000432,0.812408,0.901744,0.890904,0.884652]},{"id":16,"type":7,"l1":"subject:papain metabolism","l2":"","dist":[0.717192,0.89872,0.878196,0.933196,0.900396,0.842176,0.942612,0.849868,0.90648,0.9593,0.964736,0.922024,0.926216,0.89526,0.151476,0.812408,0,1.042416,0.874532,0.8739]},{"id":17,"type":0,"l1":"chorionic","l2":"","dist":[0.719368,0.725936,0.940936,0.8599,0.94424,1.013764,0.596392,0.842668,0.917892,0.918692,0.742852,0.827016,0.823512,0.941884,1.019764,0.901744,1.042416,0,0.922572,0.993776]},{"id":18,"type":7,"l1":"subject:antibody specificity genetics","l2":"","dist":[0.72264,0.901404,0.872584,0.98932,0.888196,0.960696,0.868996,0.901908,0.832124,0.909312,0.956756,0.92486,0.927264,1.09288,0.890284,0.890904,0.874532,0.922572,0.000292,0.942248]},{"id":19,"type":7,"l1":"subject:amniotic fluid metabolism","l2":"","dist":[0.724072,0.912028,0.312564,1.031708,0.42624,0.995056,0.94004,0.95434,0.963084,0.810936,0.90308,0.992024,0.950896,0.819224,0.870392,0.884652,0.8739,0.993776,0.942248,0.001784]}],"attributes":[{"label":"text","value":"."},{"label":"subject","value":"subject"},{"label":"author","value":"author"},{"label":"citation","value":"citation"},{"label":"issn","value":"issn"},{"label":"inst","value":"inst"},{"label":"type","value":"type"},{"label":"pdate","value":"pdate"},{"label":"lang","value":"lang"}]}
+
+center = data2.matrix[0].dist.slice(1);
+
+matrix = data2.matrix.slice(1).map( item=> item.dist.slice(1));
+
+console.log(center,matrix,'input')
+
+data = {
+        "matrix":
+        [
+            {"id":0,"type":0,"l1":"hej","l2":"","dist":[0,0.150892,0.193208,0.265368,0.477596,0.530136,0.568216,0.619612,0.640268,0.67056]},
+            {"id":1,"type":0,"l1":"baillie","l2":"","dist":[0.150892,0,0.073024,0.148884,0.4411,0.913292,0.445892,0.9296,0.576004,0.984748]},
+            {"id":2,"type":2,"l1":"author:baillie j","l2":"","dist":[0.193208,0.073024,0,0.211568,0.50298,0.932272,0.495544,0.945944,0.5952,0.959224]},
+            {"id":3,"type":0,"l1":"jonathan","l2":"","dist":[0.265368,0.148884,0.211568,0.000016,0.490956,0.915732,0.529164,0.932508,0.576896,1.024148]},
+            {"id":4,"type":0,"l1":"estates","l2":"","dist":[0.477596,0.4411,0.50298,0.490956,0.0004,0.986068,0.655688,0.986372,0.79898,0.965256]},
+            {"id":5,"type":0,"l1":"hej mice","l2":"","dist":[0.530136,0.913292,0.932272,0.915732,0.986068,0.002368,0.995524,0.271356,1.044168,0.358232]},
+            {"id":6,"type":7,"l1":"subject:maintenance and engineering hospital","l2":"","dist":[0.568216,0.445892,0.495544,0.529164,0.655688,0.995524,0.000428,0.94608,0.764608,0.976092]},
+            {"id":7,"type":0,"l1":"heouj","l2":"","dist":[0.619612,0.9296,0.945944,0.932508,0.986372,0.271356,0.94608,0.001504,0.980528,0.593068]},
+            {"id":8,"type":7,"l1":"subject:hospitals public","l2":"","dist":[0.640268,0.576004,0.5952,0.576896,0.79898,1.044168,0.764608,0.980528,0.000188,0.974156]},
+            {"id":9,"type":0,"l1":"ouj","l2":"","dist":[0.67056,0.984748,0.959224,1.024148,0.965256,0.358232,0.976092,0.593068,0.974156,0]}
+      ],
+        "attributes":
+        [
+            {"label":"text","value":"."},
+            {"label":"subject","value":"subject"},
+            {"label":"author","value":"author"},
+            {"label":"citation","value":"citation"},
+            {"label":"issn","value":"issn"},
+            {"label":"inst","value":"inst"},
+            {"label":"type","value":"type"},
+            {"label":"pdate","value":"pdate"},
+            {"label":"lang","value":"lang"}
+        ]
+    };
+    k = 11
+    buckets =[];
+    //center = [0.150892,0.193208,0.265368,0.3677596,0.530136,0.548216,0.619612,0.640268,0.67056];
+
+    range = Math.max(...center)//- Math.min(...center);
+    poses = center.map( value =>Math.floor((value- Math.min(... center))/(range/k))==k?k-1:Math.floor((value- 0.0001)/(range/k)));
+    matrices = [];
+    centers = [];
+    original = [];
+    results = [];
+    difference = []
+    for (i = 0; i<k; i++){ 
+        matrices[i] = [];
+        centers[i] = [];
+        original[i] = [];
+    }
+    console.log(poses);
+    
+    //gaps = center.map((item,index,source) => index==0?0:item-source[index-1]).slice(1,center.length)
+    //console.log(gaps);
+    // matrix=
+    //     [
+    //         [0,0.073024,0.148884,0.4411,0.913292,0.445892,0.9296,0.576004,0.984748],
+    //         [0.073024,0,0.211568,0.50298,0.932272,0.495544,0.945944,0.5952,0.959224],
+    //         [0.148884,0.211568,0.000016,0.490956,0.915732,0.529164,0.932508,0.576896,1.024148],
+    //         [0.4411,0.50298,0.490956,0.0004,0.986068,0.655688,0.986372,0.79898,0.965256],
+    //         [0.913292,0.932272,0.915732,0.986068,0.002368,0.995524,0.271356,1.044168,0.358232],
+    //         [0.445892,0.495544,0.529164,0.655688,0.995524,0.000428,0.94608,0.764608,0.976092],
+    //         [0.9296,0.945944,0.932508,0.986372,0.271356,0.94608,0.001504,0.980528,0.593068],
+    //         [0.576004,0.5952,0.576896,0.79898,1.044168,0.764608,0.980528,0.000188,0.974156],
+    //         [0.984748,0.959224,1.024148,0.965256,0.358232,0.976092,0.593068,0.974156,0]
+    //   ];
+poses.forEach((pos,index,source)=> {
+    centers[pos].push(center[index])
+    original[pos].push(index);
+    matrices[pos].push(matrix[index].filter((list,indexInner) => pos == poses[indexInner]))
+    });
+console.log(matrices,centers,original);
+for (var iii = 0; iii<k; iii++){
+    if (matrices[iii].length > 0){
+         results[iii] = tsp(matrices[iii],centers[iii],original[iii],solver);
+
+        console.log(results[iii]);
+        console.log(results[iii].placements.reduce((sum,add) => sum + add))
+        var circle = g.append("circle")
+            .attr("r", results[iii].radius*200)
+            .attr("stroke-opacity", 1)
+            .attr("cy", height/2)
+            .attr("cx",  width/2);
+    }
+}
+
+console.log(results);
+
+// console.log(((results[i].radius - results[j].radius) + results[j].radius * 
+//             Math.abs(results[i].placements[index] - results[j].placements[innerIndex])) , matrix[item][innerItem],((results[i].radius - results[j].radius) + results[j].radius * 
+//             Math.abs(results[i].placements[index] - results[j].placements[innerIndex])) < matrix[item][innerItem],results[i].radius , results[j].radius , results[j].radius * 
+//             Math.abs(results[i].placements[index] - results[j].placements[innerIndex]))
+// ;
+if (results[0]){
+    results[0].neg = 1;
+    results[0].turn = 0;
+}
+for(var i = 1;i<k; i++){
+    if (results[i]){
+    var points = Object.assign({}, results[i]); 
+    points.id = points.shortestCycle;
+    counter = 0;
+    points.pos =[];
+    points.rot = [];
+    for (var turn = 0; turn < 2*Math.PI; turn += Math.PI/10 ){
+        for (var neg = 1; neg > -2 ; neg-=2){
+            points.rot[counter] = {"turn":turn,"neg":neg};
+            if(points.shortestCycle)points.pos[counter] = points.shortestCycle.map((item,index) => neg*points.placements[index]+turn);
+            counter++
+        }
+    }
+    data = distortionCalculator(i,points,results);
+    difference[i] = data.bestDif;
+    console.log(results[i])
+        results[i].rota = points.rot[data.bestPlacement];
+        results[i].turn = points.rot[data.bestPlacement].turn;
+        results[i].neg = points.rot[data.bestPlacement].neg;
+        results[i].placements = results[i].placements.map( pos =>  mod(pos*results[i].neg + results[i].turn),(Math.PI*2));
+    }
+}
+results.forEach((result,index) => results[index].placements = result.placements.map( pos =>  mod((pos*result.neg + result.turn),(Math.PI*2))));
+console.log("bling",difference,results);
+totalDiff = results.map( item=> Infinity);
+sumDiff = Infinity;
+nn =0;
+improving = true;
+while (improving && nn< 1000){
+    for(var i = 0;i<k; i++){
+
+        if (results[i]){
+            results[i].shortestCycle.forEach((item,index,source) =>{ 
+                forbidden = [];
+                if (source.length > 1 ){
+                    forbidden.push([ 
+                    mod(results[i].placements[mod((index-1),results[i].placements.length)]- matrix[item][source[mod((index-1),results[i].placements.length)]]/results[i].radius,Math.PI*2),
+                    mod(results[i].placements[mod((index-1),results[i].placements.length)]+ matrix[item][source[mod((index-1),results[i].placements.length)]]/results[i].radius,Math.PI*2)])
+                    forbidden.push([ 
+                    mod(results[i].placements[mod((index+1),results[i].placements.length)]- matrix[item][source[mod((index+1),results[i].placements.length)]]/results[i].radius,Math.PI*2),
+                    mod(results[i].placements[mod((index+1),results[i].placements.length)]+ matrix[item][source[mod((index+1),results[i].placements.length)]]/results[i].radius,Math.PI*2)])
+                    //forbidden på index +-1 max och min värden
+                }
+                if (i > 0){
+                for(var j = 0;j<i; j++){
+                    if (results[j]){ 
+                        results[j].placements.forEach( (innerItem,innerIndex) =>{ 
+                            var non = (matrix[item][results[j].shortestCycle[innerIndex]] -(results[i].radius - results[j].radius))/results[j].radius;
+                            if( non > 0)forbidden.push([mod((innerItem-non),(Math.PI*2)),mod((innerItem+non),(Math.PI*2))]);
+                            //if( non > 0)console.log([mod((innerItem-non),(Math.PI*2)),mod((innerItem+non),(Math.PI*2))],"weooo",Array.from(forbidden));
+                            //if(!( non > 0)) console.log('non',non,i,j);
+                            //forbidden områden från ringar längre in.
+                        })
+                    }
+                }
+            }
+            fcopy = Array.from(forbidden);
+            var forbiddenDone = [];
+            if (forbidden.length>1) {forbiddenDone = forbiddenCalculator(forbidden);
+          //  console.log("bof!",forbidden,fcopy,forbiddenDone,"iiii",i);
+            // här ska skrivas test på forbidden, så den bara består av forbidden delarna, vars edges är de platser vi kollar
+            var points = Object.assign({}, results[i]); 
+            points.id = [item];
+            points.rot = [];
+            points.pos = forbiddenDone.reduce((sum,add)=> [...sum,...add]).map(item => [item]);
+            data = distortionCalculator(i,points,results);
+           // console.log(data,'data');
+            if (totalDiff[i]> data.bestDif){
+                console.log(points.pos[data.bestPlacement][0],i,"wat",item);
+                results[i].placements[index] = points.pos[data.bestPlacement][0];
+                totalDiff[i] = data.bestDif;
+            }
+            }
+            })
+        }
+    }
+    var newDiff = totalDiff.reduce((sum,add)=> add==Infinity?sum:sum+add,0);
+    if ( newDiff>= sumDiff) improving = false;
+    console.log(totalDiff,nn,newDiff,sumDiff, newDiff >= sumDiff);
+    sumDiff = newDiff;
+    nn++;
+}
+results.forEach(item => {
+    item.placements.forEach((innerItem,innerIndex)=> {
+        var circle = g.append("circle")
+            .attr("r", 10)
+            .attr("id", shortestCycle[innerIndex])
+            .attr("stroke-opacity", 1)
+            .attr("cy", height/2 + Math.sin(innerItem)*item.radius*200)
+            .attr("cx",  width/2+ Math.cos(innerItem)*item.radius*200 )
+        circle.append("text")
+        .text(item.shortestCycle[innerIndex])
+        .attr({
+      "text-anchor": "middle",
+      "font-size": "14",
+      "dy": "10"
+    });
+    })
+})
+console.log(results);
+//console.log(radialDist( results,k,matrix.length));
+
+function tsp (distances,center,indis,solver){
+    var constraints = {};
+    var variables = {};
+    var ints = {};
+    var radi = 1.7*(center.reduce((sum, add)=> sum + add)/center.length);
+    if (distances.length<2){
+        console.log('korting')
+    results= {};
+    results["orginal"] = indis;
+    results["shortestCycle"] = [""+indis[0]];
+    results["placements"] = [2*Math.PI];
+    results["center"] = center;
+    results["radius"] = radi
+    results["distances"] = distances;
+    return results;
+    }
+    distances.forEach( (row,index) => {
+        row.forEach((a,i)=>{
+            if (!(i <= index )){
+                variables[indis[index]+","+indis[i]]= {"distance":a, ["u"+indis[i]]: 1, ["d"+indis[i]]: 1,["u"+indis[index]]: 1, ["d"+indis[index]]: 1, "uses":1,"uses2":1}
+                ints[indis[index]+","+indis[i]]=1;
+            }
+        })
+    }) ;
+
+    for (b = 0; b < distances.length; b++) {
+        constraints["u"+indis[b]] = {"max": 2};
+        constraints["d"+indis[b]] = {"min": 2};
+    }
+    var solver = solver,
+    results,
+    model = {
+        "optimize": "distance",
+        "opType": "min",
+        "constraints": constraints,
+        "variables": variables,
+        "ints":ints
+    };
+    sub = 0;
+    notFull = true;
+    while (notFull && sub < 100){
+        results = solver.Solve(model);
+        // get list of list of vertices in the edges used, if one is used twice get it twice.
+        var edges = Object.keys(variables).filter( item => item in results).concat(Object.keys(variables).filter( item => results[item]==2)).map( item => item.split(","));
+        var orgEdges = Object.keys(variables).filter( item => item in results);
+        lengths = orgEdges.map(item => 0);
+        cycle = [];
+        shortestCycle = [];
+        for (i =0; i< edges.length; i++){
+            var goal = edges[i][0];
+            var iter = edges[i][1];
+            var iterIndex = i;
+            cycle[0] = goal;
+            cycle[1] = iter;
+            notDone = true;
+            cyclePos = 1;
+            while (notDone && lengths[i] < 100 ){
+                cyclePos++;
+                lengths[i]++;
+                theOne = edges.find( (element,index) => element.includes(iter) && index!=iterIndex);
+                index = theOne.findIndex(ele => ele == iter);
+                invertedIndex = +!index;
+                if (goal == theOne[invertedIndex]){
+                    notDone = false;
+                }else{
+                    iterIndex = edges.findIndex( (element,index) => element.includes(iter) && index!=iterIndex);
+                    iter = theOne[invertedIndex];
+                    cycle[cyclePos] = iter;
+                }
+
+            }
+            if ((cycle.length != 0 && cycle.length < shortestCycle.length) || shortestCycle.length == 0) shortestCycle = cycle; 
+        }
+        minLength = Math.min(...lengths);
+        //console.log((minLength >= distances.length-1),minLength , distances.length-1,lengths);
+        if (minLength >= distances.length-1){
+            notFull = false;
+        }else{
+            orgEdges.filter( (item,index) => lengths[index] == minLength).forEach(item => model.variables[item]["v"+sub]=1);
+
+            model.constraints["v"+sub] = {"max":minLength}
+        }
+        sub++;
+    }
+    console.log(sub);
+    results["shortestCycle"] = shortestCycle;
+    results["orginal"] = indis;
+    placements = shortestCycle.map((matrixIndex,index,source) => index==0?matrix[matrixIndex][source[shortestCycle.length-1]]:matrix[matrixIndex][source[index-1]]);
+    results["placements"] = placements.map(item => item*2*Math.PI/placements.reduce((sum,add) => sum + add));
+    results["center"] = center;
+    results["distances"] = distances;
+    for (ii = 1 ; ii < shortestCycle.length; ii++ ) {
+        results.placements[ii] += results.placements[ii-1];
+    }
+    results["radius"] = radi;
+    return results;
+}
+
+
+function radialDist( results,k,nr){
+    var matrix = [];
+    for (var p = 0; p<nr; p++) matrix[p] = [];
+    for (var i = 0; i<k; i++){
+        for(var j = 0;j<=i; j++){
+            if (results[i] && results[j]){ 
+                results[i].shortestCycle.forEach((item,index) =>{ 
+                    results[j].shortestCycle.forEach((innerItem,innerIndex) =>{ 
+                        matrix[item][innerItem] = (results[i].radius -results[j].radius) + results[j].radius * 
+                        mod(Math.abs(results[j].placements[innerIndex]- points.pos[posIndex][index] ),Math.PI*2)
+                        // D (e1, e2) (r2 - r1) + r1 |angle 1 - angle 2|.
+                    })
+                })
+
+            }
+        }
+        }
+    }
+
+
+
+console.log(forbiddenCalculator([
+    [1,2],
+    [1.5,3],
+    [4,5],
+    [5.5,1.5],
+    [6,2]
+]));
+function forbiddenCalculator (source){
+    copy = Array.from(source);
+    newlist = [];
+    notDone = true;
+    source.sort((a,b) => a[0] - b[0]);
+    sortedcopy = Array.from(source);
+    front = source.shift();
+    if (front[0]> front[1]) front[1] +=(Math.PI*2);
+    while (source.length>0){
+        potent = source.shift();
+        //console.log(front,potent,newlist);
+        if (potent[0]> potent[1]) potent[1] +=(Math.PI*2);
+        //console.log(front[1],potent[0] ,potent[0]> front[1] ,newlist,"ute");
+        if (potent[0]> front[1]){
+            newlist.push([front[0],front[1]%(Math.PI*2)]);
+            front = potent;
+        }else{
+            front = [Math.min(front[0],potent[0]),Math.max(front[1],potent[1])]
+        }
+    }
+    //console.log(newlist,"nya saker",front,copy,sortedcopy);
+    if (front[1]>=(Math.PI*2)){
+        front[1] = front[1]%(Math.PI*2);
+        while (notDone && newlist.length >0){
+            //console.log(newlist,copy,front);
+            if(front[1]>=newlist[0][0]){ 
+                front[1] = Math.max(newlist.shift()[1],front[1]);
+            }else{
+                notDone = false;
+            }
+        }
+    }
+    newlist.push(front);
+        return newlist;
+
+}
+
+
+
+
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+
+
+function distortionCalculator(i,points,results){
+    var bestDif = Infinity;
+    var bestPos = 0;
+    var difference = [];
+    for (var posIndex = 0; posIndex< points.pos.length; posIndex++){
+        difference[i] = 0;
+        if( i > 0){
+        for(var j = 0;j<i; j++){
+            if (points && results[j]){ 
+                difference[i] +=  points.id.reduce((sum,item,index) =>{ 
+                return (sum + results[j].shortestCycle.reduce((innerSum,innerItem,innerIndex) =>{ 
+                var distor = (((points.radius -results[j].radius) + results[j].radius * 
+                mod(Math.abs(results[j].placements[innerIndex]- points.pos[posIndex][index] ),Math.PI*2)) / matrix[item][innerItem])
+                // D (e1, e2) (r2 - r1) + r1 |angle 1 - angle 2|.
+
+
+                
+                return(innerSum + distor<1?100:distor)},0))},0)
+            }
+        }
+        }
+        if (results[i]){
+            difference[i] +=  points.id.reduce((sum,item,index) =>{ 
+                return (sum + results[i].shortestCycle.reduce((innerSum,innerItem,innerIndex) =>{ 
+                    if (item == innerItem) return 0;
+                var distor1 = (( results[i].radius * 
+                mod(Math.abs((results[i].placements[innerIndex])- points.pos[posIndex][index] ),Math.PI*2)) / matrix[item][innerItem])
+                return(innerSum + distor1<0.95?100:distor1)},0))},0)
+        }
+        // console.log(difference[i],bestDif)
+        if (difference[i] < bestDif ){
+            bestDif = difference[i];
+            bestPlacement = posIndex;
+        }
+    }
+    return {"bestDif":bestDif,"bestPlacement":bestPlacement}
+    
+}
+
+
+
+
+
+
+
+// for(var i = 1;i<k; i++){
+//    var bestDif = Infinity;
+//    var bestTurn = 0;
+//    var bestNeg = 1; 
+//     for (var turn = 0; turn < 2*Math.PI; turn += Math.PI/10 ){
+//         for (var neg = 1; neg > -2 ; neg-=2){
+//             difference[i] = 0;
+//             for(var j = 0;j<i; j++){
+//                 //console.log(results[i],results[j]);
+//                 if (results[i] && results[j]){ 
+//                     difference[i] +=  results[i].shortestCycle.reduce((sum,item,index) =>{ 
+//                     return (sum + results[j].shortestCycle.reduce((innerSum,innerItem,innerIndex) =>{ 
+//                     var distor = (((results[i].radius -results[j].radius) + results[j].radius * 
+//                     mod(Math.abs((results[j].rota+results[j].placements[innerIndex])- neg*results[i].placements[index]+turn ),Math.PI*2)) / matrix[item][innerItem])
+//                     // D (e1, e2) (r2 - r1) + r1 |angle 1 - angle 2|.
+                    
+//                     return(innerSum + distor<1?100:distor)},0))},0)
+//                 }
+//             }
+//            // console.log(difference[i],bestDif)
+//             if (difference[i] < bestDif ){
+//                 console.log('fling')
+//                 bestDif = difference[i];
+//                 bestTurn = turn;
+//                 bestNeg = neg;
+//             }
+//         }
+//     }
+//     difference[i] = bestDif;
+//     console.log(results[i])
+//     if (results[j]) results[i].rota = bestTurn*bestNeg;
+// }
+</script>
