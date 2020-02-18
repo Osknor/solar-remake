@@ -1,0 +1,169 @@
+<html>
+<head>
+  <style>
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+  }
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+  </style>
+  <meta charset='UTF-8'>
+</head>
+<body>
+  <script src='three.js/build/three.min.js'></script>
+
+  <!-- <script src='https://threejs.org/examples/js/controls/TrackballControls.js'></script> -->
+
+  <script>
+      window.onload = (event) => {
+          alert("WASD kontrollerar, R - starta om,  space FPS kamera")
+      }
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    var size = url.searchParams.get("size");
+    notWon = true;
+    console.log(size);
+    mazeLimit = parseInt(size)>5?parseInt(size):20;
+      let keys = {};
+      //mazeLimit = 30;
+      maze = new Array(mazeLimit);
+      for (i = 0; i < mazeLimit; i++){
+        maze[i] = new Array(mazeLimit).fill(1);
+      }
+      console.log(maze);
+      
+      mazeRecursive([1+Math.round(Math.random()*(mazeLimit-2)),1+Math.round(Math.random()*(mazeLimit-2)),0]);
+      console.log(maze);
+      let tempEnd = maze[mazeLimit-2].map((item,index)=> index).filter((item)=> !maze[mazeLimit-2][item]);
+      let end = tempEnd[Math.round(Math.random()*(tempEnd.length-1))];
+      maze[mazeLimit-1][end] = 0;
+      let tempStart = maze[1].map((item,index)=> index).filter((item)=> !maze[1][item]);
+      let start = tempStart[Math.round(Math.random()*(tempStart.length-1))];
+      maze[0][start] = 0;
+     function  mazeRecursive( pos ){
+
+        let potent = [];
+         if (pos[0]-1>=0 && maze[pos[0]-1][pos[1]]  && pos[2] != 1){ // i-1 höger
+            potent.push([pos[0]-1,pos[1],2])
+         }
+         if (pos[0]+1<mazeLimit && maze[pos[0]+1][pos[1]] && pos[2] != 2){ // i+1 vänster
+            potent.push([pos[0]+1,pos[1],1])
+         }
+         if (pos[1]-1>=0 && maze[pos[0]][pos[1]-1] && pos[2] != 3){ // j-1 upp
+            potent.push([pos[0],pos[1]-1,4])
+         }
+         if (pos[1]+1<mazeLimit && maze[pos[0]][pos[1]+1] && pos[2] != 4){ // j+1 ner
+            potent.push([pos[0],pos[1]+1,3])
+         }
+        
+         if (potent.length > 2){ 
+         potent.sort(()=> Math.random() - 0.5)
+         potent.sort(()=> Math.random() - 0.5)
+         maze[pos[0]][pos[1]] = 0;
+         potent.forEach(item => mazeRecursive(item))
+         }
+     }
+
+  var container = document.querySelector('body'),
+      w = container.clientWidth,
+      h = container.clientHeight,
+      scene = new THREE.Scene(),
+      camera = new THREE.PerspectiveCamera(75, w/h, 0.001, 100),
+    //  controls = new THREE.TrackballControls(camera, container),
+      renderConfig = {antialias: true, alpha: true},
+      renderer = new THREE.WebGLRenderer(renderConfig);
+  //controls.target = new THREE.Vector3(0, 0, 0.75);
+  //controls.panSpeed = 0.4;
+  camera.position.set(0, 0, -mazeLimit);
+  camera.lookAt(new THREE.Vector3(0, 0, 0))
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(w, h);
+  container.appendChild(renderer.domElement);
+
+  window.addEventListener('resize', function() {
+    w = container.clientWidth;
+    h = container.clientHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  })
+  //keyCode;
+  function render() {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+    //controls.update();
+    //console.log((keys["KeyW"]?0.01:0 - keys["KeyS"]?0.01:0))
+    //sphere.position.y += (keys["KeyW"]?0.05:0 + keys["KeyS"]?-0.05:0);
+    speed = 0.004*mazeLimit
+    potentY = sphere.position.y + (keys["KeyW"]?speed:0 + keys["KeyS"]?-speed:0);
+    potentX = sphere.position.x + (keys["KeyA"]?speed:0 + keys["KeyD"]?-speed:0);
+    //console.log(maze[Math.floor(potentY+(mazeLimit-1)/2)][Math.floor(sphere.position.x+(mazeLimit-1)/2)]
+    //console.log(maze[Math.round(potentY+(mazeLimit-1)/2)][Math.round(sphere.position.x+(mazeLimit-1)/2)],Math.round(potentY+(mazeLimit-1)/2),Math.round(sphere.position.x+(mazeLimit-1)/2))
+    if ( Math.round(potentY+(mazeLimit-1)/2) >=0 && Math.round(potentY+(mazeLimit-1)/2) < mazeLimit && !(maze[Math.round(potentY+(mazeLimit-1)/2)][Math.round(sphere.position.x+(mazeLimit-1)/2)]) )
+    sphere.position.y = potentY;
+    //potentX = sphere.position.x + (keys["KeyA"]?0.05:0 + keys["KeyD"]?-0.05:0);
+    if ( Math.round(potentX+(mazeLimit-1)/2) >=0 && Math.round(potentX+(mazeLimit-1)/2) < mazeLimit &&!(maze[Math.round(sphere.position.y+(mazeLimit-1)/2)][Math.round(potentX+(mazeLimit-1)/2)]))
+    sphere.position.x = potentX;
+    if (keys["KeyR"]){
+        sphere.position.set(start-(mazeLimit-1)/2,0-(mazeLimit-1)/2,0);
+    }
+    if (notWon && Math.round(sphere.position.y+(mazeLimit-1)/2) == mazeLimit-1 && Math.round(sphere.position.x+(mazeLimit-1)/2) == end){
+        notWon = false;
+        alert(" Du vann! ladda om sidan för att spela igen, lägg till ?size=x för att spela på annan storlek");
+    }
+    if (keys["Space"]){
+        camera.position.set(sphere.position.x,sphere.position.y,sphere.position.z);
+        //camera.lookAt(new THREE.Vector3(sphere.position.x + potentX*4, sphere.position.y + potentY*4, 0))
+        camera.up = (new THREE.Vector3(0, 0, -1));
+        camera.lookAt(new THREE.Vector3(0, 110000, 0));
+    }else{
+        camera.position.set(0,0,-mazeLimit);
+        camera.lookAt(new THREE.Vector3(0, 0, 0))
+        camera.up = (new THREE.Vector3(0, 1, 0))
+    }
+  }
+
+    document.addEventListener('keydown', (e) => {
+        keys[e.code] = 1
+    });
+    document.addEventListener('keyup', (e) => {
+        keys[e.code] = 0
+    });
+
+  // draw some geometries
+  for (i = 0; i < mazeLimit; i++){
+    for (j = 0; j < mazeLimit; j++){
+        if (maze[i][j]){
+        var geometry = new THREE.BoxGeometry( 1, 1, 1);
+        var material = new THREE.MeshNormalMaterial(  );
+        var cube = new THREE.Mesh( geometry, material, );
+        //cube.rotateX(0.5);
+        cube.position.set(j-(mazeLimit-1)/2,i-(mazeLimit-1)/2,0)
+        //console.log(torus);
+        scene.add( cube );
+        }
+
+    }
+    }
+    var geometry = new THREE.SphereGeometry( 0.2, 32, 32 );
+    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    var sphere = new THREE.Mesh( geometry, material );
+    sphere.position.set(start-(mazeLimit-1)/2,0-(mazeLimit-1)/2,0)
+    //sphere.position.set(0-(mazeLimit-1)/2,-1-(mazeLimit-1)/2,0)
+    scene.add( sphere );
+
+
+  render();
+
+  </script>
+</body>
+</html>
